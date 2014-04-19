@@ -1,5 +1,3 @@
-# $Id: Makefile,v 1.28 2005/08/03 15:49:39 gsson Exp $
-
 PREFIX?=/usr/local
 INSTALL_BIN?=${PREFIX}/bin
 INSTALL_MAN?=${PREFIX}/man/man1

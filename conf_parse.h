@@ -1,4 +1,3 @@
-/* $Id: conf_parse.h,v 1.2 2005/07/09 13:04:23 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *

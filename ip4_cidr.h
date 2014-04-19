@@ -1,4 +1,3 @@
-/* $Id: ip4_cidr.h,v 1.8 2005/07/05 21:15:46 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *

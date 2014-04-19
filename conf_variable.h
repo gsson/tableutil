@@ -1,4 +1,3 @@
-/* $Id: conf_variable.h,v 1.8 2005/08/01 08:39:48 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *

@@ -1,4 +1,3 @@
-/* $Id: table_fileop.c,v 1.7 2005/08/26 18:30:24 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *

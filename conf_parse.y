@@ -1,4 +1,3 @@
-/* $Id: conf_parse.y,v 1.65 2005/08/01 09:18:58 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *

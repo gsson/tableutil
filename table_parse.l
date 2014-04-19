@@ -1,4 +1,3 @@
-/* $Id: table_parse.l,v 1.3 2005/10/06 19:26:52 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *

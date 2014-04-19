@@ -1,4 +1,3 @@
-/* $Id: ip4_range.c,v 1.51 2005/08/01 08:42:58 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *

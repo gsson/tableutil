@@ -1,4 +1,3 @@
-/* $Id: tableutil.c,v 1.31 2005/08/03 15:45:17 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
