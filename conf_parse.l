@@ -1,4 +1,4 @@
-/* $Id: conf_parse.l,v 1.33 2005/08/01 08:39:48 gsson Exp $ */
+/* $Id: conf_parse.l,v 1.34 2005/10/06 19:39:55 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -63,8 +63,9 @@ p2b/[^[:alnum:]]	return P2BTOK;
 ;                       return SEMICOLON;
 ,                       return COMMA;
 
-\n                      /* Ignore EOL */;
+\n                      /* Ignore EOL */
+\r			/* Ignore EOL */
 "//".*\n		/* Ignore C++-style comments */
 "#".*\n                 /* Ignore sh-style comments */
-[ \t]+                  /* Ignore whitespace */;
+[ \t]+                  /* Ignore whitespace */
 %%

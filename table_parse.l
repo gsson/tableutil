@@ -1,4 +1,4 @@
-/* $Id: table_parse.l,v 1.2 2005/07/08 23:29:41 gsson Exp $ */
+/* $Id: table_parse.l,v 1.3 2005/10/06 19:26:52 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -39,7 +39,9 @@ IP	[[:digit:]]{1,3}(\.[[:digit:]]{1,3}){3}
 {IP}-{IP}	table_lval=strdup(table_text); return RANGE;
 {IP}        table_lval=strdup(table_text); return SINGLEIP;
 [[:alpha:]][[:alnum:]\-]*(\.[[:alpha:]][[:alnum:]\-]*)*	table_lval=strdup(table_text); return HOSTNAME;
+\r\n			return NEWLINE;
 \n                      return NEWLINE;
+\r			return NEWLINE;
 
 \#.*		        /* Ignore sh-style comments */
 [ \t]+                  /* ignore whitespace */
