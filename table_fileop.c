@@ -1,4 +1,4 @@
-/* $Id: table_fileop.c,v 1.6 2005/08/01 08:39:48 gsson Exp $ */
+/* $Id: table_fileop.c,v 1.7 2005/08/26 18:30:24 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -35,6 +35,9 @@ ip4_p2b_load(const char *name, ip4_range_list_t *list) {
 	char magic_buf[P2B_MAGIC_SIZE];
 	int version;
 	int c;
+	int i;
+	u_int32_t count;
+	u_int32_t name_index;
 	u_int32_t start;
 	u_int32_t end;
 	
@@ -59,23 +62,47 @@ ip4_p2b_load(const char *name, ip4_range_list_t *list) {
 		return -1;
 	}
 	version = gzgetc(file);
-	if ((version != 1) && (version != 2)) {
-
+	
+	if (version == 1 || version == 2) {
+		while (!gzeof(file)) {
+			c = gzgetc(file);
+			while (!gzeof(file) && c != '\0') {
+				c = gzgetc(file);
+			}
+			gzread(file, &start, sizeof(u_int32_t));
+			gzread(file, &end, sizeof(u_int32_t));
+			start=ntohl(start);
+			end=ntohl(end);	
+			ip4_range_list_insert_range_raw(list, start, end, NULL);
+		}
+	}
+	else if (version == 3){
+		gzread(file, &count, sizeof(u_int32_t));
+		count=ntohl(count);
+		/* Skip names */
+		for (i = 0; i < count; i++) {
+			c = gzgetc(file);
+			while (!gzeof(file) && c != '\0') {
+				c = gzgetc(file);
+			}
+		}
+		
+		gzread(file, &count, sizeof(u_int32_t));
+		count=ntohl(count);
+		for (i = 0; i < count; i++) {
+			gzread(file, &name_index, sizeof(u_int32_t));
+			gzread(file, &start, sizeof(u_int32_t));
+			gzread(file, &end, sizeof(u_int32_t));
+			start=ntohl(start);
+			end=ntohl(end);	
+			ip4_range_list_insert_range_raw(list, start, end, NULL);
+		}		
+	}
+	else {
 		fprintf(stderr, "Unsupported P2B-version (%d) in file '%s'.\n", version, name);
 		return -1;
 	}
-	
-	while (!gzeof(file)) {
-		c = gzgetc(file);
-		while (!gzeof(file) && c != '\0') {
-			c = gzgetc(file);
-		}
-		gzread(file, &start, sizeof(u_int32_t));
-		gzread(file, &end, sizeof(u_int32_t));
-		start=ntohl(start);
-		end=ntohl(end);	
-		ip4_range_list_insert_range_raw(list, start, end, NULL);
-	}
+		
 	gzclose(file);
 
 	return 0;
