@@ -1,0 +1,14 @@
+
+$range = { 192.168.0.0-192.168.2.255 };
+$cidr = { 192.168.3.0/24 };
+$text = load(text, "file_with_networks");
+$p2b = load(p2b, "p2p.p2b.gz");
+
+$table1 = difference($p2b, $text);
+$table2 = union($range, $table);
+$table3 = invert({192.168.0.1});
+
+save(cidr, "table1", $table1);
+save(range, "table2", $table2);
+save(cidr, "table3", $table3);
+save(range, "everything", { 0.0.0.0/0 } );
