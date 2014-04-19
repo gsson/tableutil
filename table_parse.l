@@ -15,14 +15,15 @@
  */
 
 %{
+#define YYSTYPE char *
 #include <string.h>
 #include <stdio.h>
 #include "types.h"
 #include "yacc.table_parse.tab.h"
 
-int table_lex(void);
+extern YYSTYPE table_lval;
 
-extern char *table_lval;
+int table_lex(void);
 
 %}
 
