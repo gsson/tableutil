@@ -1,4 +1,4 @@
-/* $Id: conf_parse.y,v 1.55 2005/07/07 20:13:56 gsson Exp $ */
+/* $Id: conf_parse.y,v 1.60 2005/07/08 22:57:31 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -22,32 +22,28 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "types.h"
+#include "conf_parse.h"
 #include "conf_variable.h"
 
 
-int yydebug=0;
-void yyerror(const char *str);
 
-void conf_parse(FILE *f);
-void conf_parse_file(const char *file);
-void conf_parse_str(const char *str);
-
-extern int confline;
+extern int conf_lineno;
 
 
-int yylex(void);
-int yyparse(void);
-int yywrap(void);
-void yyrestart(FILE *input_file);
+int conf_lex(void);
+int conf_parse(void);
+void conf_restart(FILE *input_file);
+void conf_error(const char *str);
 
 
 
 %}
 
 
-%token <string> VARIABLE WORD STRING CIDR RANGE SINGLEIP
-%token QUOTE OBRACE EBRACE OPAREN EPAREN SEMICOLON COMMA ASSIGN STDINTOK STDOUTTOK TEXTTOK CIDRTOK RANGETOK
-%token LOADTOK SAVETOK UNIONTOK DIFFERENCETOK INTERSECTTOK INVERTTOK P2BTOK COMMENT
+%token <string> VARIABLE STRING CIDR RANGE SINGLEIP HOSTNAME
+%token QUOTE OBRACE EBRACE OPAREN EPAREN SEMICOLON COMMA ASSIGN
+%token STDINTOK STDOUTTOK TEXTTOK CIDRTOK RANGETOK
+%token LOADTOK SAVETOK UNIONTOK DIFFERENCETOK INTERSECTTOK INVERTTOK P2BTOK
 %type <v> table_statement assign table_literal table_literal_entry
 %type <v> load_statement union_statement difference_statement 
 %type <v> intersection_statement invert_statement
@@ -56,12 +52,11 @@ void yyrestart(FILE *input_file);
 	char *string;
 	struct variable* v;
 };
-
+%start statements
 %%
 
 statements:
 	statements statement SEMICOLON
-	| statements COMMENT
 	|
 	;
 
@@ -94,9 +89,11 @@ table_literal_entry:
 	CIDR	{ $$ = variable_create(); variable_insert_cidr($$, $1); }
 	| RANGE { $$ = variable_create(); variable_insert_range($$, $1); }
 	| SINGLEIP { $$ = variable_create(); variable_insert_single($$, $1); }
+	| HOSTNAME { $$ = variable_create(); variable_insert_hostname($$, $1); }
 	| table_literal_entry COMMA CIDR { $$ = variable_insert_cidr($1, $3); }
 	| table_literal_entry COMMA RANGE { $$ = variable_insert_range($1, $3); }
 	| table_literal_entry COMMA SINGLEIP { $$ = variable_insert_single($1, $3); }
+	| table_literal_entry COMMA HOSTNAME { $$ = variable_insert_hostname($1, $3); }
 	;
 	
 table_literal:
@@ -136,24 +133,23 @@ save_statement:
 	
 	
 %%
-void conf_parse(FILE *f) {
-	variable_list_init(&variable_list);
-	yyrestart(f);
-	yyparse();
-	variable_list_destroy(&variable_list);
-}
 
-void conf_parse_file(const char *file) {
+void
+conf_parse_file(const char *file) {
 	FILE *f = fopen(file, "r");
 	if (f == NULL) {
 		fprintf(stderr, "Error opening file %s.\n", file);
 		return;
 	}
-	conf_parse(f);
+	variable_list_init(&variable_list);
+	conf_restart(f);
+	conf_parse();
+	variable_list_destroy(&variable_list);
 	fclose(f);
 }
 
-void conf_parse_str(const char *c) {
+void
+conf_parse_str(const char *c) {
 	int fd[2];
 	FILE *f;
 	int len;
@@ -168,16 +164,14 @@ void conf_parse_str(const char *c) {
 	}
 	close(fd[1]);
 	f = fdopen(fd[0], "r");
-	conf_parse(f);
+	variable_list_init(&variable_list);
+	conf_restart(f);
+	conf_parse();
+	variable_list_destroy(&variable_list);
 	fclose(f);
 }
 
-void yyerror(const char *str) {
-	fprintf(stderr,"error: %s on line: %d\n",str, confline);
+void
+conf_error(const char *str) {
+	fprintf(stderr,"error: %s on line: %d\n",str, conf_lineno);
 }
-
-int yywrap() {
-	return 1;
-}
-
-

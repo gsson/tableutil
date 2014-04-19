@@ -1,4 +1,4 @@
-/* $Id: tableutil.c,v 1.27 2005/07/07 18:19:11 gsson Exp $ */
+/* $Id: tableutil.c,v 1.29 2005/07/09 14:49:56 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
 #include "table_fileop.h"
 #include "types.h"
 #include "ip4_range.h"
@@ -94,7 +96,12 @@ main(int argc, char *const *argv) {
 		return 0;
 	}
 	case 'q': {
-		quickconvert(argv[0], argv[1]);
+		if (argc == 2) {
+			quickconvert(argv[0], argv[1]);
+		}
+		else if (argc == 1) {
+			quickconvert(argv[0], NULL);
+		}
 		return 0;
 	}
 	}
@@ -105,7 +112,7 @@ main(int argc, char *const *argv) {
 void usage(void) {
 	extern char *__progname;
 
-	fprintf(stderr, "usage: %s -q type table\n", __progname);
+	fprintf(stderr, "usage: %s -q type [table]\n", __progname);
 	fprintf(stderr, "       %s -c commands\n", __progname);
 	fprintf(stderr, "       %s -f file\n", __progname);
 	exit(1);

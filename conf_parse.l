@@ -1,4 +1,4 @@
-/* $Id: conf_parse.l,v 1.24 2005/07/07 20:29:26 gsson Exp $ */
+/* $Id: conf_parse.l,v 1.31 2005/07/09 14:18:28 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -19,36 +19,40 @@
 #include <string.h>
 #include <stdio.h>
 #include "types.h"
-#include "y.tab.h"
+#include "yacc.conf_parse.tab.h"
 
-#define YY_NO_UNPUT
+int conf_lex(void);
 
-int yylex(void);
-
-int confline = 1;
 %}
+
+%option yylineno
+%option noyywrap
+%option nounput
+
+IP	[[:digit:]]{1,3}(\.[[:digit:]]{1,3}){3}
 
 %%
 
-load/[^a-zA-Z0-9]	return LOADTOK;
-save/[^a-zA-Z0-9]	return SAVETOK;
-union/[^a-zA-Z0-9]	return UNIONTOK;
-difference/[^a-zA-Z0-9]	return DIFFERENCETOK;
-intersect/[^a-zA-Z0-9]	return INTERSECTTOK;
-invert/[^a-zA-Z0-9]	return INVERTTOK;
-stdin/[^a-zA-Z0-9]	return STDINTOK;
-stdout/[^a-zA-Z0-9]	return STDOUTTOK;
-text/[^a-zA-Z0-9]	return TEXTTOK;
-cidr/[^a-zA-Z0-9]	return CIDRTOK;
-range/[^a-zA-Z0-9]	return RANGETOK;
-p2b/[^a-zA-Z0-9]	return P2BTOK;
+load/[^[:alnum:]]	return LOADTOK;
+save/[^[:alnum:]]	return SAVETOK;
+union/[^[:alnum:]]	return UNIONTOK;
+difference/[^[:alnum:]]	return DIFFERENCETOK;
+intersect/[^[:alnum:]]	return INTERSECTTOK;
+invert/[^[:alnum:]]	return INVERTTOK;
+stdin/[^[:alnum:]]	return STDINTOK;
+stdout/[^[:alnum:]]	return STDOUTTOK;
+text/[^[:alnum:]]	return TEXTTOK;
+cidr/[^[:alnum:]]	return CIDRTOK;
+range/[^[:alnum:]]	return RANGETOK;
+p2b/[^[:alnum:]]	return P2BTOK;
 
-[0-9]{0,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\/[1-9]?[0-9]        yylval.string=strdup(yytext); return CIDR;
-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}	yylval.string=strdup(yytext); return RANGE;
-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}        yylval.string=strdup(yytext); return SINGLEIP;
+{IP}\/[[:digit:]]{1,2}        conf_lval.string=strdup(conf_text); return CIDR;
+{IP}-{IP}	conf_lval.string=strdup(conf_text); return RANGE;
+{IP}        conf_lval.string=strdup(conf_text); return SINGLEIP;
+[[:alpha:]][[:alnum:]\-]*(\.[[:alpha:]][[:alnum:]\-]*)*	conf_lval.string=strdup(conf_text); return HOSTNAME;
 
-\$[a-zA-Z][a-zA-Z0-9_]+    yylval.string=strdup(yytext); return VARIABLE;
-\"[^\"\n]*\"		{int l = strlen(yytext)-2; yylval.string=malloc(l+1); strncpy(yylval.string, yytext+1,l); return STRING;}
+\$[[:alpha:]][[:alnum:]_]+    conf_lval.string=strdup(conf_text); return VARIABLE;
+\"[^\"\n]*\"		{ int l = strlen(conf_text)-2; conf_lval.string=malloc(l+1); strncpy(conf_lval.string, conf_text+1,l); conf_lval.string[l] = '\0'; return STRING; }
 \{                      return OBRACE;
 \}                      return EBRACE;
 \(                      return OPAREN;
@@ -57,7 +61,8 @@ p2b/[^a-zA-Z0-9]	return P2BTOK;
 ;                       return SEMICOLON;
 ,                       return COMMA;
 
-\n                      confline++; /* ignore EOL */;
-\#[^\n]*/\n		/* Ignore sh-style comments */
-[ \t]+                  /* ignore whitespace */;
+\n                      /* Ignore EOL */;
+"//".*\n		/* Ignore C++-style comments */
+"#".*\n                 /* Ignore sh-style comments */
+[ \t]+                  /* Ignore whitespace */;
 %%

@@ -1,5 +1,4 @@
-/* $Id: conf_variable.h,v 1.3 2005/07/07 19:02:06 gsson Exp $ */
-
+/* $Id: conf_variable.h,v 1.5 2005/07/09 13:04:23 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -34,9 +33,10 @@ struct variable *variable_assign(char *c, struct variable *table);
 struct variable *variable_dup(struct variable *var);
 struct variable *variable_create(void);
 void variable_destroy(struct variable *var);
-struct variable *variable_insert_range(struct variable *list, const char *address);
-struct variable *variable_insert_cidr(struct variable *list, const char *address);
-struct variable *variable_insert_single(struct variable *list, const char *address);
+struct variable *variable_insert_range(struct variable *list, char *address);
+struct variable *variable_insert_cidr(struct variable *list, char *address);
+struct variable *variable_insert_single(struct variable *list, char *address);
+struct variable *variable_insert_hostname(struct variable *list, char *hostname);
 struct variable *variable_load_text(char *file);
 struct variable *variable_load_p2b(char *file);
 struct variable *variable_union(struct variable *lhs, struct variable *rhs);

@@ -1,0 +1,87 @@
+.\" $Id: tableutil.1,v 1.4 2005/07/09 14:49:56 gsson Exp $
+.\" 
+.\" Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
+.\" 
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\" 
+.Dd July 8 2005
+.Dt TABLEUTIL 1
+.Os
+.Sh NAME
+.Nm tableutil
+.Nd "converts and performs operations on tables"
+.Sh SYNOPSIS
+.Nm
+.Fl f Ar file
+.Nm
+.Fl c Ar commands
+.Nm
+.Fl q Ar type Op Ar file
+.Sh DESCRIPTION
+.Nm
+can be used to convert files with IP-addresses and ranges and aggregate networks.
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl f Ar file
+.Ar file
+is the name of the file with commands to be loaded.
+.It Fl c Ar commands
+execute the commands specified by
+.Ar commands .
+.It Fl q Ar type Op Ar file
+Quick-convert 
+.Ar file
+from
+.Ar type
+to a CIDR-notation, as used by PF. 
+.Ar type
+can be either 'text' or 'p2b'. The text format accepts addresses on the form 'n.n.n.n', 'n.n.n.n-n.n.n.n' or 'n.n.n.n/n'. p2b is the format used in the lists provided by blocklist.org. If
+.Ar file
+is omitted, standard input is assumed. p2b-files can be either gzipped or uncompressed.
+.El
+.Sh COMMAND FILE/STRING
+The command file/string consists of a series of statements separated by ;
+.Sh GRAMMAR
+TODO...
+.Sh EXAMPLES
+Example quick-conversion:
+.Bd -literal -offset indent
+	$ tableutil -q p2b ads.p2b.gz
+.Ed
+
+Example command-file:
+.Bd -literal -offset indent
+	# Assign some values to some variables
+	$range = { 192.168.0.0-192.168.2.255 };
+	$cidr = { 192.168.3.0/24 };
+	$text = load(text, "file_with_networks");
+	$p2b = load(p2b, "ads.p2b.gz");
+	
+	# Do some calculations and store them in some other variables
+	$table1 = difference($p2b, $text);
+	$table2 = union($range, $cidr);
+	$table3 = invert( { 192.168.0.1 } );
+	$table4 = intersect( { 192.168.1.0-192.168.3.255 }, $range);
+	
+	# Save some of the variables, and a bonus, to files.
+	save(cidr, "table1", $table1);
+	save(range, "table2", $table2);
+	save(cidr, "table3", $table3);
+	save(cidr, "table4", $table4);
+	save(range, "table5", { 0.0.0.0/0 } );
+.Ed
+
+.Sh BUGS
+Many, probably. And the man-page needs improving.
+.Sh SEE ALSO
+.Xr pfctl 8

@@ -8,8 +8,8 @@ $p2b = load(p2b, "ads.p2b.gz");
 # Do some calculations and store them in some other variables
 $table1 = difference($p2b, $text);
 $table2 = union($range, $cidr);
-$table3 = invert({192.168.0.1});
-$table4 = intersect({192.168.1.0-192.168.3.255}, $range);
+$table3 = invert( { 192.168.0.1 } );
+$table4 = intersect( { 192.168.1.0-192.168.3.255 }, $range);
 
 # Save some of the variables, and a bonus, to files.
 save(cidr, "table1", $table1);

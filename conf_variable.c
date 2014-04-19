@@ -1,4 +1,4 @@
-/* $Id: conf_variable.c,v 1.6 2005/07/07 20:27:20 gsson Exp $ */
+/* $Id: conf_variable.c,v 1.8 2005/07/08 21:47:27 gsson Exp $ */
 
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
@@ -19,6 +19,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
 #include "ip4_range.h"
 #include "table_fileop.h"
 #include "conf_variable.h"
@@ -47,7 +51,8 @@ variable_list_t variable_list;
  */
 
 
-void variable_list_destroy(variable_list_t *list) {
+void
+variable_list_destroy(variable_list_t *list) {
 	struct variable_list_element *element;
 	element = TAILQ_FIRST(list);
 	while (!TAILQ_EMPTY(list)) {
@@ -59,12 +64,14 @@ void variable_list_destroy(variable_list_t *list) {
 	TAILQ_INIT(list);
 }
 
-void variable_list_init(variable_list_t *list) {
+void
+variable_list_init(variable_list_t *list) {
 	TAILQ_INIT(list);
 }
 
-/* Does not free c! */
-struct variable *variable_list_find(variable_list_t *vlist, char *c) {
+/* Note: Does not free 'c' */
+struct variable *
+variable_list_find(variable_list_t *vlist, char *c) {
 	struct variable_list_element *element;
 	if (TAILQ_EMPTY(vlist)) {
 		return NULL;
@@ -81,7 +88,8 @@ struct variable *variable_list_find(variable_list_t *vlist, char *c) {
 	return NULL;
 }
 
-struct variable *variable_list_variable_create(variable_list_t *vlist, char *c) {
+struct variable *
+variable_list_variable_create(variable_list_t *vlist, char *c) {
 	struct variable_list_element *element;
 	
 	if (TAILQ_EMPTY(&variable_list)) {
@@ -132,7 +140,8 @@ struct variable *variable_list_variable_create(variable_list_t *vlist, char *c) 
 	exit(-1);
 }
 
-struct variable *variable_find(char *c) {
+struct variable *
+variable_find(char *c) {
 	struct variable *v;
 	v = variable_list_find(&variable_list, c);
 	if (v != NULL) {
@@ -144,7 +153,8 @@ struct variable *variable_find(char *c) {
 	return v;
 }
 
-struct variable *variable_dup(struct variable *var) {
+struct variable *
+variable_dup(struct variable *var) {
 
 	struct variable *new_var;
 
@@ -163,7 +173,8 @@ struct variable *variable_dup(struct variable *var) {
 }
 
 
-struct variable *variable_assign(char *c, struct variable *src) {
+struct variable *
+variable_assign(char *c, struct variable *src) {
 	struct variable *dst = variable_find(c);
 
 	if (src->temporary) {
@@ -178,7 +189,8 @@ struct variable *variable_assign(char *c, struct variable *src) {
 	return dst;
 }
 
-struct variable *variable_get(char *c) {
+struct variable *
+variable_get(char *c) {
 	if (c != NULL) {
 		struct variable *v;
 		v = variable_list_find(&variable_list, c);
@@ -194,7 +206,8 @@ struct variable *variable_get(char *c) {
 	return NULL;
 }
 
-void variable_destroy(struct variable *var) {
+void 
+variable_destroy(struct variable *var) {
 	if (var != NULL) {
 		ip4_range_list_destroy(&(var->table));
 		if (var->name != NULL) {
@@ -204,7 +217,8 @@ void variable_destroy(struct variable *var) {
 	}
 }
 
-struct variable *variable_create() {
+struct variable *
+variable_create() {
 	struct variable *var = malloc(sizeof(struct variable));
 	if (var == NULL) {
 		fprintf(stderr, "Allocation error\n");
@@ -216,7 +230,8 @@ struct variable *variable_create() {
 	return var;
 }
 
-struct variable *variable_insert_range(struct variable *list, const char *address) {
+struct variable *
+variable_insert_range(struct variable *list, char *address) {
     int 			a, b, c, d;
     int 			a1, b1, c1, d1;
     
@@ -231,10 +246,12 @@ struct variable *variable_insert_range(struct variable *list, const char *addres
 			d1 >= 0 && d1 < 256) {
 			ip4_range_list_insert_range_raw(&(list->table), IP(a,b,c,d), IP(a1,b1,c1,d1), NULL);
 	}    	
+	free(address);
 	return list;
 }
 
-struct variable *variable_insert_cidr(struct variable *list, const char *address) {
+struct variable *
+variable_insert_cidr(struct variable *list, char *address) {
     int 			a, b, c, d;
     int 			p;
     
@@ -246,10 +263,44 @@ struct variable *variable_insert_cidr(struct variable *list, const char *address
 			p >= 0 && p < 33) {
 			ip4_range_list_insert_cidr(&(list->table), IP(a,b,c,d), p, NULL);
 	}
+	free(address);
 	return list;
 }
 
-struct variable *variable_insert_single(struct variable *list, const char *address) {
+struct variable *
+variable_insert_hostname(struct variable *list, char *hostname) {
+
+	struct addrinfo *ai_result;
+	struct addrinfo *ai;
+	struct sockaddr_in *sa;
+	
+	int result;
+	struct addrinfo hint;
+	
+	memset(&hint, 0, sizeof(struct addrinfo));
+	
+	hint.ai_family = AF_INET;
+	hint.ai_socktype = SOCK_STREAM;
+	
+	result = getaddrinfo(hostname, NULL, &hint, &ai_result);
+	if (result) {
+		fprintf(stderr, "Host lookup for host '%s' failed: %s\n", hostname, gai_strerror(result));
+		free(hostname);
+		return list;
+	}
+	
+	for (ai = ai_result; ai; ai = ai->ai_next) {
+		sa = (struct sockaddr_in *) ai->ai_addr;
+		ip4_range_list_insert_cidr(&(list->table), ntohl(sa->sin_addr.s_addr), 32, NULL);
+	}
+	
+	freeaddrinfo(ai_result);
+	free(hostname);
+	return list;
+}
+
+struct variable *
+variable_insert_single(struct variable *list, char *address) {
     int 			a, b, c, d;
     
 	if (sscanf(address, "%d.%d.%d.%d", &a, &b, &c, &d) == 4 &&
@@ -259,11 +310,12 @@ struct variable *variable_insert_single(struct variable *list, const char *addre
 			d >= 0 && d < 256) {
 			ip4_range_list_insert_cidr(&(list->table), IP(a,b,c,d), 32, NULL);
 	}
-	
+	free(address);
 	return list;
 }
 
-struct variable *variable_load_text(char *file) {
+struct variable *
+variable_load_text(char *file) {
 	struct variable *var = NULL;
 
 	var = variable_create();
@@ -272,7 +324,8 @@ struct variable *variable_load_text(char *file) {
 	return var;
 }
 
-struct variable *variable_load_p2b(char *file) {
+struct variable *
+variable_load_p2b(char *file) {
 	struct variable *var = NULL;
 
 	var = variable_create();
@@ -281,7 +334,8 @@ struct variable *variable_load_p2b(char *file) {
 	return var;
 }
 
-struct variable *variable_union(struct variable  *lhs, struct variable  *rhs) {
+struct variable *
+variable_union(struct variable  *lhs, struct variable  *rhs) {
 	struct variable *var = NULL;
 	
 	var = variable_create();
@@ -297,7 +351,8 @@ struct variable *variable_union(struct variable  *lhs, struct variable  *rhs) {
 	return var;
 }
 
-struct variable *variable_intersect(struct variable  *lhs, struct variable  *rhs) {
+struct variable *
+variable_intersect(struct variable  *lhs, struct variable  *rhs) {
 	struct variable *var = NULL;
 	
 	var = variable_create();
@@ -313,7 +368,8 @@ struct variable *variable_intersect(struct variable  *lhs, struct variable  *rhs
 	return var;
 }
 
-struct variable *variable_difference(struct variable  *lhs, struct variable  *rhs) {
+struct variable *
+variable_difference(struct variable  *lhs, struct variable  *rhs) {
 	struct variable *var = NULL;
 	
 	var = variable_create();
@@ -329,7 +385,8 @@ struct variable *variable_difference(struct variable  *lhs, struct variable  *rh
 	return var;
 }
 
-struct variable *variable_invert(struct variable *rhs) {
+struct variable *
+variable_invert(struct variable *rhs) {
 	struct variable *var = NULL;
 	
 	var = variable_create();
@@ -342,7 +399,8 @@ struct variable *variable_invert(struct variable *rhs) {
 	return var;
 }
 
-void variable_save_cidr(char *file, struct variable *rhs) {
+void
+variable_save_cidr(char *file, struct variable *rhs) {
 	ip4_cidr_save(file, &(rhs->table));
 	
 	if (rhs->temporary) {
@@ -352,7 +410,8 @@ void variable_save_cidr(char *file, struct variable *rhs) {
 	return;
 }
 
-void variable_save_range(char *file, struct variable *rhs) {
+void 
+variable_save_range(char *file, struct variable *rhs) {
 	ip4_range_save(file, &(rhs->table));
 	
 	if (rhs->temporary) {

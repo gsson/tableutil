@@ -1,4 +1,4 @@
-/* $Id: table_fileop.c,v 1.3 2005/07/05 21:15:46 gsson Exp $ */
+/* $Id: table_fileop.c,v 1.5 2005/07/08 22:57:31 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -18,10 +18,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <zlib.h>
 #include <sys/types.h>
 #include <ctype.h>
 
+#include "table_parse.h"
 #include "table_fileop.h"
 #include "ip4_range.h"
 
@@ -83,6 +85,9 @@ ip4_p2b_load(const char *name, ip4_range_list_t *list) {
 
 int
 ip4_text_load(const char *name, ip4_range_list_t *list) {
+	table_parse_file(name, list);
+	
+#if 0
 	char token[TOKEN_SIZE];
     static char     ch = ' ';
     int             i = 0;
@@ -173,7 +178,7 @@ ip4_text_load(const char *name, ip4_range_list_t *list) {
 		}
 	}
 	gzclose(file);
-
+#endif
 	return 0;
 }
 
