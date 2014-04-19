@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.14 2005/07/05 21:08:42 gsson Exp $
+# $Id: Makefile,v 1.15 2005/07/07 18:15:05 gsson Exp $
 
 PREFIX?=/usr/local
 INSTALL_BIN?=${INSTALL_PREFIX}/bin
@@ -15,7 +15,7 @@ LDFLAGS+=-pedantic -Wall -ansi -lz
 .PHONY: all clean obj
 
 TARGET=tableutil
-OBJECTS=tableutil.o table_fileop.o ip4_cidr.o ip4_range.o lex.yy.o y.tab.o
+OBJECTS=tableutil.o table_fileop.o ip4_cidr.o ip4_range.o conf_variable.o lex.yy.o y.tab.o
 MAN=tableutil.1
 
 all: ${TARGET}

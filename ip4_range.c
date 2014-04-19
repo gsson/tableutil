@@ -1,4 +1,4 @@
-/* $Id: ip4_range.c,v 1.42 2005/07/05 21:25:04 gsson Exp $ */
+/* $Id: ip4_range.c,v 1.44 2005/07/07 20:19:40 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -180,7 +180,7 @@ ip4_range_list_union(const ip4_range_list_t *lhs, const ip4_range_list_t *rhs, i
 	/*
 	 * Try to keep them sorted. Will make insertion faster.
 	 */	
-	while (lhs_element != NULL && rhs_element != NULL) {
+	while (lhs_element != NULL || rhs_element != NULL) {
 		while (lhs_element != NULL && (rhs_element == NULL || lhs_element->range.start < rhs_element->range.start)) {
 			ip4_range_list_insert_range(result, &(lhs_element->range), NULL);
 			lhs_element = TAILQ_NEXT(lhs_element, ip4_range_list_links);
@@ -319,6 +319,10 @@ ip4_range_list_invert(const ip4_range_list_t *rhs, ip4_range_list_t *result) {
 	rhs_element = TAILQ_FIRST(rhs);
 	ip4_range_list_destroy(result);
 	
+	if (rhs_element == NULL) {
+		ip4_range_list_insert_range_raw(result, 0x00000000, 0xFFFFFFFF, NULL);
+		return result;
+	}
 	
 	if (rhs_element->range.start > 0) {
 		ip4_range_list_insert_range_raw(result, 0, rhs_element->range.start-1, NULL);

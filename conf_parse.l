@@ -1,4 +1,4 @@
-/* $Id: conf_parse.l,v 1.15 2005/07/05 21:23:06 gsson Exp $ */
+/* $Id: conf_parse.l,v 1.24 2005/07/07 20:29:26 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -21,6 +21,8 @@
 #include "types.h"
 #include "y.tab.h"
 
+#define YY_NO_UNPUT
+
 int yylex(void);
 
 int confline = 1;
@@ -28,25 +30,25 @@ int confline = 1;
 
 %%
 
-load			return LOADTOK;
-save			return SAVETOK;
-union			return UNIONTOK;
-difference		return DIFFERENCETOK;
-intersect		return INTERSECTTOK;
-invert			return INVERTTOK;
-stdin			return STDINTOK;
-stdout			return STDOUTTOK;
-text			return TEXTTOK;
-cidr			return CIDRTOK;
-range			return RANGETOK;
-p2b				return P2BTOK;
+load/[^a-zA-Z0-9]	return LOADTOK;
+save/[^a-zA-Z0-9]	return SAVETOK;
+union/[^a-zA-Z0-9]	return UNIONTOK;
+difference/[^a-zA-Z0-9]	return DIFFERENCETOK;
+intersect/[^a-zA-Z0-9]	return INTERSECTTOK;
+invert/[^a-zA-Z0-9]	return INVERTTOK;
+stdin/[^a-zA-Z0-9]	return STDINTOK;
+stdout/[^a-zA-Z0-9]	return STDOUTTOK;
+text/[^a-zA-Z0-9]	return TEXTTOK;
+cidr/[^a-zA-Z0-9]	return CIDRTOK;
+range/[^a-zA-Z0-9]	return RANGETOK;
+p2b/[^a-zA-Z0-9]	return P2BTOK;
 
-[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\/[0-9]+        yylval.string=strdup(yytext); return CIDR;
-[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+	yylval.string=strdup(yytext); return RANGE;
-[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+        yylval.string=strdup(yytext); return SINGLEIP;
+[0-9]{0,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\/[1-9]?[0-9]        yylval.string=strdup(yytext); return CIDR;
+[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}	yylval.string=strdup(yytext); return RANGE;
+[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}        yylval.string=strdup(yytext); return SINGLEIP;
+
 \$[a-zA-Z][a-zA-Z0-9_]+    yylval.string=strdup(yytext); return VARIABLE;
-[a-zA-Z0-9_\.\/\-]+        yylval.string=strdup(yytext); return FILENAME;
-\"                      return QUOTE;
+\"[^\"\n]*\"		{int l = strlen(yytext)-2; yylval.string=malloc(l+1); strncpy(yylval.string, yytext+1,l); return STRING;}
 \{                      return OBRACE;
 \}                      return EBRACE;
 \(                      return OPAREN;
@@ -56,6 +58,6 @@ p2b				return P2BTOK;
 ,                       return COMMA;
 
 \n                      confline++; /* ignore EOL */;
+\#[^\n]*/\n		/* Ignore sh-style comments */
 [ \t]+                  /* ignore whitespace */;
-
 %%

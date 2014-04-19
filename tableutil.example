@@ -1,14 +1,19 @@
 
+# Assign some values to some variables
 $range = { 192.168.0.0-192.168.2.255 };
 $cidr = { 192.168.3.0/24 };
 $text = load(text, "file_with_networks");
-$p2b = load(p2b, "p2p.p2b.gz");
+$p2b = load(p2b, "ads.p2b.gz");
 
+# Do some calculations and store them in some other variables
 $table1 = difference($p2b, $text);
-$table2 = union($range, $table);
+$table2 = union($range, $cidr);
 $table3 = invert({192.168.0.1});
+$table4 = intersect({192.168.1.0-192.168.3.255}, $range);
 
+# Save some of the variables, and a bonus, to files.
 save(cidr, "table1", $table1);
 save(range, "table2", $table2);
 save(cidr, "table3", $table3);
-save(range, "everything", { 0.0.0.0/0 } );
+save(cidr, "table4", $table4);
+save(range, "table5", { 0.0.0.0/0 } );

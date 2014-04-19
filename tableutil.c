@@ -1,4 +1,4 @@
-/* $Id: tableutil.c,v 1.23 2005/07/05 21:15:46 gsson Exp $ */
+/* $Id: tableutil.c,v 1.27 2005/07/07 18:19:11 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -23,46 +23,81 @@
 #include "ip4_range.h"
 
 void usage(void);
-void parse_commands(FILE *f);
+void conf_parse_file(const char *file);
+void conf_parse_str(const char *str);
+void quickconvert(const char *type, const char *infile);
 
 const char arg_p2b[]="p2b";
 const char arg_text[]="text";
 
-int
-main(int argc, const char *argv[]) {
-	FILE *f;
-	ip4_range_list_t *range_list;
+void quickconvert(const char *type, const char *file) {
+	ip4_range_list_t range_list;
 	int load_ok = 0;
+
+	ip4_range_list_init(&range_list);
 	
-	if (argc < 2 || argc > 3) {
-		usage();
+	if (!strcmp(arg_p2b, type)) {
+		if (!ip4_p2b_load(file, &range_list)) {
+			load_ok = 1;
+		}
 	}
-	if (argc == 3) {
-		range_list = malloc(sizeof(ip4_range_list_t));
-		ip4_range_list_init(range_list);
-		
-		if (!strcmp(arg_p2b, argv[1])) {
-			if (!ip4_p2b_load(argv[2], range_list)) {
-				load_ok = 1;
-			}
+	else if (!strcmp(arg_text, type)) {
+		if (!ip4_text_load(file, &range_list)) {
+			load_ok = 1;
 		}
-		else if (!strcmp(arg_text, argv[1])) {
-			if (!ip4_text_load(argv[2], range_list)) {
-				load_ok = 1;
-			}
-		}
-		else {
-			usage();
-		}
-		ip4_range_list_output_cidr(stdout, range_list);
-		ip4_range_list_destroy(range_list);
-		free(range_list);
 	}
 	else {
-		f = fopen(argv[1], "r");
-		parse_commands(f);
+		usage();
 	}
+	
+	if (load_ok) {
+		ip4_range_list_output_cidr(stdout, &range_list);
+	}
+	
+	ip4_range_list_destroy(&range_list);
+}
 
+int
+main(int argc, char *const *argv) {
+	int ch;
+	char t = 0;
+	if (argc < 3 || argc > 4) {
+		usage();
+	}
+	
+	while ((ch = getopt(argc, argv, "cfq")) != -1) {
+		switch (ch) {
+		case 'c':
+		case 'f':
+		case 'q': {
+			if (t) usage();
+			t = ch;
+			break;
+		}
+		default: {
+			usage();
+			break;
+		}
+		}
+	}
+	
+	argc -=optind;
+	argv +=optind;
+	
+	switch (t) {
+	case 'c': {
+		conf_parse_str(argv[0]);
+		return 0;
+	}
+	case 'f': {
+		conf_parse_file(argv[0]);
+		return 0;
+	}
+	case 'q': {
+		quickconvert(argv[0], argv[1]);
+		return 0;
+	}
+	}
 	return 0;
 }
 
@@ -70,7 +105,8 @@ main(int argc, const char *argv[]) {
 void usage(void) {
 	extern char *__progname;
 
-	fprintf(stderr, "usage: %s type table\n", __progname);
-	fprintf(stderr, "       %s scriptfile\n", __progname);
+	fprintf(stderr, "usage: %s -q type table\n", __progname);
+	fprintf(stderr, "       %s -c commands\n", __progname);
+	fprintf(stderr, "       %s -f file\n", __progname);
 	exit(1);
 }
