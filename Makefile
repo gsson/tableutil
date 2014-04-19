@@ -9,7 +9,7 @@ GROFF?=`which groff`
 #CFLAGS= -g
 
 CFLAGS+=-pedantic -Wall -Wstrict-prototypes -Wmissing-prototypes -ansi
-LDFLAGS+=-pedantic -Wall -ansi -lz
+LDFLAGS+=-pedantic -Wall -lz
 
 .PHONY: all clean html obj lint
 
@@ -44,7 +44,7 @@ lint:
 	lint *.c -Ctableutil -H -I. -I/usr/include
 
 ${TARGET}: ${OBJECTS}
-	${CC} ${LDFLAGS} $> -o $@
+	${CC} ${LDFLAGS} ${OBJECTS} -o $@
 
 .c.o:
 	${CC} ${CFLAGS} -c $< -o $@
