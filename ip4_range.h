@@ -1,4 +1,4 @@
-/* $Id: ip4_range.h,v 1.20 2005/07/05 21:15:46 gsson Exp $ */
+/* $Id: ip4_range.h,v 1.21 2005/08/01 08:39:48 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -30,6 +30,7 @@ void ip4_range_list_init(ip4_range_list_t *list);
 void ip4_range_list_destroy(ip4_range_list_t *list);
 void ip4_range_list_output_cidr(FILE *f, ip4_range_list_t *list);
 void ip4_range_list_output_range(FILE *f, ip4_range_list_t *list);
+void ip4_range_list_output_single(FILE *f, ip4_range_list_t *list);
 
 ip4_range_list_t *ip4_range_list_union(const ip4_range_list_t *lhs, const ip4_range_list_t *rhs, ip4_range_list_t *result);
 ip4_range_list_t *ip4_range_list_difference(const ip4_range_list_t *lhs, const ip4_range_list_t *rhs, ip4_range_list_t *result);
@@ -40,6 +41,7 @@ ip4_range_list_t *ip4_range_list_dup(const ip4_range_list_t *src, ip4_range_list
 
 u_int32_t ip4_distance(u_int32_t a, u_int32_t b);
 void ip4_range_output(FILE *f, u_int32_t start, u_int32_t end);
+void ip4_range_output_single(FILE *f, u_int32_t start, u_int32_t end);
 int ip4_range_overlap(const struct ip4_range *a, const struct ip4_range *b);
 
 #endif /*_IP4_RANGE_H_*/

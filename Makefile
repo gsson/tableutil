@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.24 2005/07/08 22:57:31 gsson Exp $
+# $Id: Makefile,v 1.28 2005/08/03 15:49:39 gsson Exp $
 
 PREFIX?=/usr/local
 INSTALL_BIN?=${PREFIX}/bin
@@ -13,7 +13,7 @@ GROFF?=`which groff`
 CFLAGS+=-pedantic -Wall -Wstrict-prototypes -Wmissing-prototypes -ansi
 LDFLAGS+=-pedantic -Wall -ansi -lz
 
-.PHONY: all clean html obj
+.PHONY: all clean html obj lint
 
 TARGET=tableutil
 OBJECTS=tableutil.o table_fileop.o ip4_cidr.o ip4_range.o \
@@ -33,15 +33,20 @@ clean:
 	rm -f ${OBJECTS}
 	rm -f yacc.conf_parse.tab.c yacc.conf_parse.tab.h lex.conf_parse.c
 	rm -f yacc.table_parse.tab.c yacc.table_parse.tab.h lex.table_parse.c
+	rm -f llib-ltableutil.ln
 
 obj: ${OBJECTS}
 
 html:
 	${GROFF} -Thtml -mandoc tableutil.1 > tableutil.html
 
+obj: ${OBJECTS}
+
+lint:
+	lint *.c -Ctableutil -H -I. -I/usr/include
+
 ${TARGET}: ${OBJECTS}
 	${CC} ${LDFLAGS} $> -o $@
-
 
 .c.o:
 	${CC} ${CFLAGS} -c $< -o $@
@@ -57,4 +62,3 @@ lex.table_parse.c: table_parse.l yacc.table_parse.tab.h
 
 yacc.table_parse.tab.c yacc.table_parse.tab.h: table_parse.y
 	${YACC} -ptable_ -byacc.table_parse -d table_parse.y
-	

@@ -1,4 +1,4 @@
-/* $Id: ip4_range.c,v 1.45 2005/07/08 23:56:12 gsson Exp $ */
+/* $Id: ip4_range.c,v 1.51 2005/08/01 08:42:58 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -23,6 +23,8 @@
 #define MAX(a, b) (((a) > (b))?(a):(b))
 #define MIN(a, b) (((a) < (b))?(a):(b))
 
+#define IP4_MAX ((u_int32_t)(0xFFFFFFFFU))
+#define IP4_MIN ((u_int32_t)(0x00000000U))
 
 u_int32_t
 ip4_distance(u_int32_t a, u_int32_t b) {
@@ -93,6 +95,7 @@ ip4_range_list_insert_range(ip4_range_list_t *list, const struct ip4_range *rang
 			if (new_element == NULL) {
 				fprintf(stderr, "Allocation error\n");
 				exit(-1);
+				/* NOTREACHED */
 			}
 			new_element->range = *range;
 			TAILQ_INSERT_TAIL(list, new_element, ip4_range_list_links);
@@ -119,6 +122,7 @@ ip4_range_list_insert_range(ip4_range_list_t *list, const struct ip4_range *rang
 			if (new_element == NULL) {
 				fprintf(stderr, "Allocation error\n");
 				exit(-1);
+				/* NOTREACHED */
 			}
 			new_element->range = *range;
 			TAILQ_INSERT_BEFORE(element, new_element, ip4_range_list_links);
@@ -127,6 +131,7 @@ ip4_range_list_insert_range(ip4_range_list_t *list, const struct ip4_range *rang
 	}
 	fprintf(stderr, "*dies*\n");
 	exit(-1);
+	/* NOTREACHED */
 }
 
 ip4_range_list_t *
@@ -140,6 +145,7 @@ ip4_range_list_dup(const ip4_range_list_t *src, ip4_range_list_t *dst) {
 		if (dst_element == NULL) {
 			fprintf(stderr, "Allocation error\n");
 			exit(-1);
+			/* NOTREACHED */
 		}
 		dst_element->range = src_element->range;
 		TAILQ_INSERT_TAIL(dst, dst_element, ip4_range_list_links);
@@ -320,7 +326,7 @@ ip4_range_list_invert(const ip4_range_list_t *rhs, ip4_range_list_t *result) {
 	ip4_range_list_destroy(result);
 	
 	if (rhs_element == NULL) {
-		ip4_range_list_insert_range_raw(result, 0x00000000, 0xFFFFFFFF, NULL);
+		ip4_range_list_insert_range_raw(result, IP4_MIN, IP4_MAX, NULL);
 		return result;
 	}
 	
@@ -336,8 +342,8 @@ ip4_range_list_invert(const ip4_range_list_t *rhs, ip4_range_list_t *result) {
 		rhs_element = TAILQ_NEXT(rhs_element, ip4_range_list_links);
 	}
 
-	if (start < 0xFFFFFFFF) {
-		ip4_range_list_insert_range_raw(result, start+1, 0xFFFFFFFF, NULL);
+	if (start < IP4_MAX) {
+		ip4_range_list_insert_range_raw(result, start+1, IP4_MAX, NULL);
 	}
 
 	return result;
@@ -362,7 +368,7 @@ ip4_range_list_output_cidr(FILE *f, ip4_range_list_t *list) {
 			ip4_cidr_output(f, cidr_address, cidr_prefix);
 			fprintf(f, "\n");
 		}
-		else if (diff_address == 0xFFFFFFFF) {
+		else if (diff_address == IP4_MAX) {
 			cidr_address = 0;
 			cidr_prefix = 0;
 			ip4_cidr_output(f, cidr_address, cidr_prefix);
@@ -401,8 +407,25 @@ ip4_range_list_output_range(FILE *f, ip4_range_list_t *list) {
 	
 }
 
+void
+ip4_range_list_output_single(FILE *f, ip4_range_list_t *list) {
+	struct ip4_range_list_element *element;
+
+	TAILQ_FOREACH(element, list, ip4_range_list_links) {
+		ip4_range_output_single(f, element->range.start, element->range.end);
+	}	
+	
+}
+
 void ip4_range_output(FILE *f, u_int32_t start, u_int32_t end) {
         fprintf(f, "%d.%d.%d.%d", start >> 24 & 255, start >> 16 & 255, start >> 8 & 255, start & 255);
         fprintf(f, "-");
         fprintf(f, "%d.%d.%d.%d", end >> 24 & 255, end >> 16 & 255, end >> 8 & 255, end & 255);
+}
+
+void ip4_range_output_single(FILE *f, u_int32_t start, u_int32_t end) {
+	u_int32_t n;
+	for (n = start; n <= end; n++) {
+        fprintf(f, "%d.%d.%d.%d\n", n >> 24 & 255, n >> 16 & 255, n >> 8 & 255, n & 255);
+	}
 }

@@ -1,4 +1,4 @@
-/* $Id: conf_variable.h,v 1.5 2005/07/09 13:04:23 gsson Exp $ */
+/* $Id: conf_variable.h,v 1.8 2005/08/01 08:39:48 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -27,9 +27,9 @@ void variable_list_destroy(variable_list_t *list);
 struct variable *variable_list_find(variable_list_t *vlist, char *c);
 struct variable *variable_list_variable_create(variable_list_t *vlist, char *c);
 
-struct variable *variable_find(char *c);
-struct variable *variable_get(char *c);
-struct variable *variable_assign(char *c, struct variable *table);
+struct variable *variable_find(variable_list_t *vlist, char *c);
+struct variable *variable_get(variable_list_t *vlist, char *c);
+struct variable *variable_assign(variable_list_t *vlist, char *c, struct variable *table);
 struct variable *variable_dup(struct variable *var);
 struct variable *variable_create(void);
 void variable_destroy(struct variable *var);
@@ -45,6 +45,7 @@ struct variable *variable_difference(struct variable *lhs, struct variable *rhs)
 struct variable *variable_invert(struct variable *rhs);
 void variable_save_cidr(char *file, struct variable *rhs);
 void variable_save_range(char *file, struct variable *rhs);
+void variable_save_single(char *file, struct variable *rhs);
 variable_list_t variable_list;
 
 #endif /*_CONF_VARIABLE_H_*/

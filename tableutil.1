@@ -1,4 +1,4 @@
-.\" $Id: tableutil.1,v 1.4 2005/07/09 14:49:56 gsson Exp $
+.\" $Id: tableutil.1,v 1.7 2005/08/03 16:37:11 gsson Exp $
 .\" 
 .\" Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
 .\" 
@@ -22,9 +22,9 @@
 .Nd "converts and performs operations on tables"
 .Sh SYNOPSIS
 .Nm
-.Fl f Ar file
-.Nm
 .Fl c Ar commands
+.Nm
+.Fl f Ar file
 .Nm
 .Fl q Ar type Op Ar file
 .Sh DESCRIPTION
@@ -32,12 +32,12 @@
 can be used to convert files with IP-addresses and ranges and aggregate networks.
 The options are as follows:
 .Bl -tag -width Ds
-.It Fl f Ar file
-.Ar file
-is the name of the file with commands to be loaded.
 .It Fl c Ar commands
 execute the commands specified by
 .Ar commands .
+.It Fl f Ar file
+.Ar file
+is the name of the file with commands to be loaded.
 .It Fl q Ar type Op Ar file
 Quick-convert 
 .Ar file
@@ -79,8 +79,16 @@ Example command-file:
 	save(cidr, "table3", $table3);
 	save(cidr, "table4", $table4);
 	save(range, "table5", { 0.0.0.0/0 } );
+	save(single, "table6", $cidr );
 .Ed
-
+.Sh RETURN VALUES
+.Nm
+can exit with the following values:
+.Bl -tag -width Ds
+.It 0 Command completed successfully.
+.It 1 Invalid arguments supplied.
+.It -1 Internal error.
+.El
 .Sh BUGS
 Many, probably. And the man-page needs improving.
 .Sh SEE ALSO

@@ -1,4 +1,4 @@
-/* $Id: tableutil.c,v 1.29 2005/07/09 14:49:56 gsson Exp $ */
+/* $Id: tableutil.c,v 1.31 2005/08/03 15:45:17 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -32,7 +32,8 @@ void quickconvert(const char *type, const char *infile);
 const char arg_p2b[]="p2b";
 const char arg_text[]="text";
 
-void quickconvert(const char *type, const char *file) {
+void
+quickconvert(const char *type, const char *file) {
 	ip4_range_list_t range_list;
 	int load_ok = 0;
 
@@ -50,6 +51,7 @@ void quickconvert(const char *type, const char *file) {
 	}
 	else {
 		usage();
+		/* NOTREACHED */
 	}
 	
 	if (load_ok) {
@@ -69,17 +71,18 @@ main(int argc, char *const *argv) {
 	
 	while ((ch = getopt(argc, argv, "cfq")) != -1) {
 		switch (ch) {
-		case 'c':
-		case 'f':
-		case 'q': {
-			if (t) usage();
-			t = ch;
-			break;
-		}
-		default: {
-			usage();
-			break;
-		}
+			case 'c':
+			case 'f':
+			case 'q': {
+				if (t) usage();
+				t = ch;
+				break;
+			}
+			default: {
+				usage();
+				/* NOTREACHED */
+				break;
+			}
 		}
 	}
 	
@@ -87,33 +90,35 @@ main(int argc, char *const *argv) {
 	argv +=optind;
 	
 	switch (t) {
-	case 'c': {
-		conf_parse_str(argv[0]);
-		return 0;
-	}
-	case 'f': {
-		conf_parse_file(argv[0]);
-		return 0;
-	}
-	case 'q': {
-		if (argc == 2) {
-			quickconvert(argv[0], argv[1]);
+		case 'c': {
+			conf_parse_str(argv[0]);
+			return 0;
 		}
-		else if (argc == 1) {
-			quickconvert(argv[0], NULL);
+		case 'f': {
+			conf_parse_file(argv[0]);
+			return 0;
 		}
-		return 0;
-	}
+		case 'q': {
+			if (argc == 2) {
+				quickconvert(argv[0], argv[1]);
+			}
+			else if (argc == 1) {
+				quickconvert(argv[0], NULL);
+			}
+			return 0;
+		}
 	}
 	return 0;
 }
 
 
-void usage(void) {
+__attribute__((__noreturn__)) void
+usage(void) {
 	extern char *__progname;
 
 	fprintf(stderr, "usage: %s -q type [table]\n", __progname);
 	fprintf(stderr, "       %s -c commands\n", __progname);
 	fprintf(stderr, "       %s -f file\n", __progname);
 	exit(1);
+	/* NOTREACHED */
 }

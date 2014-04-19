@@ -1,4 +1,4 @@
-/* $Id: table_parse.y,v 1.6 2005/07/08 23:45:49 gsson Exp $ */
+/* $Id: table_parse.y,v 1.7 2005/08/03 16:37:11 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -30,6 +30,7 @@
 #include "table_parse.h"
 
 #define YYSTYPE char *
+#define YY_EXIT_FAILURE -1
 
 extern int table_lineno;
 

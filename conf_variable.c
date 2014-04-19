@@ -1,4 +1,4 @@
-/* $Id: conf_variable.c,v 1.8 2005/07/08 21:47:27 gsson Exp $ */
+/* $Id: conf_variable.c,v 1.14 2005/08/01 08:39:48 gsson Exp $ */
 
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
@@ -38,8 +38,6 @@
 	(head)->tqh_first = NULL;	\
 	(head)->tqh_last = &(head)->tqh_first;	\
 	} while(0)
-
-variable_list_t variable_list;
 
 /*
  * Note: The variable_* functions disposes the pointers used as
@@ -92,40 +90,43 @@ struct variable *
 variable_list_variable_create(variable_list_t *vlist, char *c) {
 	struct variable_list_element *element;
 	
-	if (TAILQ_EMPTY(&variable_list)) {
+	if (TAILQ_EMPTY(vlist)) {
 		element = malloc(sizeof(struct variable_list_element));
 		if (element == NULL) {
 			fprintf(stderr, "Allocation error\n");
 			exit(-1);
+			/* NOTREACHED */
 		}
 		element->v = variable_create();
 		element->v->name = c;
 		element->v->temporary = 0;
-		TAILQ_INSERT_HEAD(&variable_list, element, variable_list_links);
+		TAILQ_INSERT_HEAD(vlist, element, variable_list_links);
 		return element->v;
 	}
 
-	if (strncmp(c, TAILQ_LAST(&variable_list, variable_list)->v->name, MAXTOKLEN) > 0) {
+	if (strncmp(c, TAILQ_LAST(vlist, variable_list)->v->name, MAXTOKLEN) > 0) {
 		element = malloc(sizeof(struct variable_list_element));
 		if (element == NULL) {
 			fprintf(stderr, "Allocation error\n");
 			exit(-1);
+			/* NOTREACHED */
 		}
 		element->v = variable_create();
 		element->v->name = c;
 		element->v->temporary = 0;
 
-		TAILQ_INSERT_TAIL(&variable_list, element, variable_list_links);
+		TAILQ_INSERT_TAIL(vlist, element, variable_list_links);
 		return element->v;		
 	}
 	
-	TAILQ_FOREACH(element, &variable_list, variable_list_links) {
+	TAILQ_FOREACH(element, vlist, variable_list_links) {
 		if (strncmp(c, element->v->name, MAXTOKLEN) < 0) {
 			struct variable_list_element *new_element;
 			new_element = malloc(sizeof(struct variable_list_element));
 			if (new_element == NULL) {
 				fprintf(stderr, "Allocation error\n");
 				exit(-1);
+				/* NOTREACHED */
 			}
 			new_element->v = variable_create();
 			new_element->v->name = c;
@@ -138,18 +139,19 @@ variable_list_variable_create(variable_list_t *vlist, char *c) {
 	
 	fprintf(stderr, "*dies*\n");
 	exit(-1);
+	/* NOTREACHED */
 }
 
 struct variable *
-variable_find(char *c) {
+variable_find(variable_list_t *vlist, char *c) {
 	struct variable *v;
-	v = variable_list_find(&variable_list, c);
+	v = variable_list_find(vlist, c);
 	if (v != NULL) {
 		free(c);
 		return v;
 	}
 	
-	v = variable_list_variable_create(&variable_list, c);
+	v = variable_list_variable_create(vlist, c);
 	return v;
 }
 
@@ -174,8 +176,8 @@ variable_dup(struct variable *var) {
 
 
 struct variable *
-variable_assign(char *c, struct variable *src) {
-	struct variable *dst = variable_find(c);
+variable_assign(variable_list_t *vlist, char *c, struct variable *src) {
+	struct variable *dst = variable_find(vlist, c);
 
 	if (src->temporary) {
 		ip4_range_list_destroy(&(dst->table));
@@ -190,10 +192,10 @@ variable_assign(char *c, struct variable *src) {
 }
 
 struct variable *
-variable_get(char *c) {
+variable_get(variable_list_t *vlist, char *c) {
 	if (c != NULL) {
 		struct variable *v;
-		v = variable_list_find(&variable_list, c);
+		v = variable_list_find(vlist, c);
 		if (v != NULL) {
 			free(c);
 			return v;
@@ -201,7 +203,7 @@ variable_get(char *c) {
 		
 		fprintf(stderr, "Variable '%s' does not exist.\n", c);
 		
-		return variable_list_variable_create(&variable_list, c);
+		return variable_list_variable_create(vlist, c);
 	}
 	return NULL;
 }
@@ -223,6 +225,7 @@ variable_create() {
 	if (var == NULL) {
 		fprintf(stderr, "Allocation error\n");
 		exit(-1);
+		/* NOTREACHED */
 	}
 	TAILQ_INIT(&(var->table));
 	var->temporary=1;
@@ -413,6 +416,17 @@ variable_save_cidr(char *file, struct variable *rhs) {
 void 
 variable_save_range(char *file, struct variable *rhs) {
 	ip4_range_save(file, &(rhs->table));
+	
+	if (rhs->temporary) {
+		variable_destroy(rhs);
+	}
+	if (file != NULL) free(file);
+	return;
+}
+
+void 
+variable_save_single(char *file, struct variable *rhs) {
+	ip4_single_save(file, &(rhs->table));
 	
 	if (rhs->temporary) {
 		variable_destroy(rhs);

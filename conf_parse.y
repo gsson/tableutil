@@ -1,4 +1,4 @@
-/* $Id: conf_parse.y,v 1.60 2005/07/08 22:57:31 gsson Exp $ */
+/* $Id: conf_parse.y,v 1.65 2005/08/01 09:18:58 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -35,14 +35,14 @@ int conf_parse(void);
 void conf_restart(FILE *input_file);
 void conf_error(const char *str);
 
-
+variable_list_t variable_list;
 
 %}
 
 
 %token <string> VARIABLE STRING CIDR RANGE SINGLEIP HOSTNAME
 %token QUOTE OBRACE EBRACE OPAREN EPAREN SEMICOLON COMMA ASSIGN
-%token STDINTOK STDOUTTOK TEXTTOK CIDRTOK RANGETOK
+%token STDINTOK STDOUTTOK TEXTTOK CIDRTOK RANGETOK SINGLETOK
 %token LOADTOK SAVETOK UNIONTOK DIFFERENCETOK INTERSECTTOK INVERTTOK P2BTOK
 %type <v> table_statement assign table_literal table_literal_entry
 %type <v> load_statement union_statement difference_statement 
@@ -67,11 +67,11 @@ statement:
 	;
 
 assign:
-	VARIABLE ASSIGN table_statement	{ variable_assign($1, $3); $$ = $3; }
+	VARIABLE ASSIGN table_statement	{ variable_assign(&variable_list, $1, $3); $$ = $3; }
 	;
 	
 table_statement:
-	VARIABLE	{ $$ = variable_get($1); }
+	VARIABLE	{ $$ = variable_get(&variable_list, $1); }
 	| assign
 	| table_literal
 	| load_statement
@@ -127,8 +127,10 @@ invert_statement:
 save_statement:
 	SAVETOK OPAREN CIDRTOK COMMA STRING COMMA table_statement EPAREN   { variable_save_cidr($5, $7); }
 	| SAVETOK OPAREN RANGETOK COMMA STRING COMMA table_statement EPAREN   { variable_save_range($5, $7); }
+	| SAVETOK OPAREN SINGLETOK COMMA STRING COMMA table_statement EPAREN   { variable_save_single($5, $7); }
 	| SAVETOK OPAREN CIDRTOK COMMA STDOUTTOK COMMA table_statement EPAREN   { variable_save_cidr(NULL, $7); }
 	| SAVETOK OPAREN RANGETOK COMMA STDOUTTOK COMMA table_statement EPAREN   { variable_save_range(NULL, $7); }
+	| SAVETOK OPAREN SINGLETOK COMMA STDOUTTOK COMMA table_statement EPAREN   { variable_save_single(NULL, $7); }
 	;
 	
 	

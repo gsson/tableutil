@@ -17,3 +17,4 @@ save(range, "table2", $table2);
 save(cidr, "table3", $table3);
 save(cidr, "table4", $table4);
 save(range, "table5", { 0.0.0.0/0 } );
+save(single, "table6", $cidr );

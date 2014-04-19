@@ -1,4 +1,4 @@
-/* $Id: table_fileop.h,v 1.2 2005/07/05 21:15:46 gsson Exp $ */
+/* $Id: table_fileop.h,v 1.3 2005/08/01 08:39:48 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -24,5 +24,5 @@ int ip4_p2b_load(const char *name, ip4_range_list_t *list);
 int ip4_text_load(const char *name, ip4_range_list_t *list);
 int ip4_cidr_save(const char *name, ip4_range_list_t *list);
 int ip4_range_save(const char *name, ip4_range_list_t *list);
-
+int ip4_single_save(const char *name, ip4_range_list_t *list);
 #endif /*_TABLE_LOAD_H_*/

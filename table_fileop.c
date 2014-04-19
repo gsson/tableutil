@@ -1,4 +1,4 @@
-/* $Id: table_fileop.c,v 1.5 2005/07/08 22:57:31 gsson Exp $ */
+/* $Id: table_fileop.c,v 1.6 2005/08/01 08:39:48 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -215,6 +215,24 @@ ip4_range_save(const char *name, ip4_range_list_t *list) {
 		}
 	}
 	ip4_range_list_output_range(file, list);
+	fclose(file);
+	return 0;
+}
+
+int
+ip4_single_save(const char *name, ip4_range_list_t *list) {
+	FILE *file;
+	if (name == NULL) {
+		file = stdout;
+	}
+	else {
+		file = fopen(name, "w");
+		if (file == NULL) {
+			fprintf(stderr, "Error opening file '%s'.\n", name);
+			return -1;
+		}
+	}
+	ip4_range_list_output_single(file, list);
 	fclose(file);
 	return 0;
 }

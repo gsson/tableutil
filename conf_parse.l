@@ -1,4 +1,4 @@
-/* $Id: conf_parse.l,v 1.31 2005/07/09 14:18:28 gsson Exp $ */
+/* $Id: conf_parse.l,v 1.33 2005/08/01 08:39:48 gsson Exp $ */
 /*
  * Copyright (c) 2005 Henrik Gustafsson <henrik.gustafsson@fnord.se>
  *
@@ -18,6 +18,7 @@
 %{
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "types.h"
 #include "yacc.conf_parse.tab.h"
 
@@ -43,6 +44,7 @@ stdin/[^[:alnum:]]	return STDINTOK;
 stdout/[^[:alnum:]]	return STDOUTTOK;
 text/[^[:alnum:]]	return TEXTTOK;
 cidr/[^[:alnum:]]	return CIDRTOK;
+single/[^[:alnum:]]	return SINGLETOK;
 range/[^[:alnum:]]	return RANGETOK;
 p2b/[^[:alnum:]]	return P2BTOK;
 
